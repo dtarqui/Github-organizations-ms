@@ -1,3 +1,88 @@
 spring:
+  profiles:
+    active: dev 
   application:
     name: Github-organizations-ms
+
+  # ===== DATASOURCE =====
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:githubx_organizations}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgress}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # ===== JPA =====
+  jpa:
+    hibernate:
+      ddl-auto: update          # En produccion: validate. Para desarrollo inicial usar: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: public
+
+  # ===== SEGURIDAD: OAuth2 Resource Server con JWT =====
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/githubx}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8080/realms/githubx/protocol/openid-connect/certs}
+
+# ===== SERVIDOR =====
+server:
+  port: ${SERVER_PORT:8083}
+  servlet:
+    context-path: /
+
+# ===== ACTUATOR =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ===== SPRINGDOC / SWAGGER =====
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  info:
+    title: Mini-GitHub Organizations API
+    version: 1.0.0
+    description: Microservicio de gestión de organizaciones, equipos y miembros
+
+# ===== LOGGING =====
+logging:
+  level:
+    root: INFO
+    com.githubx: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+
+
+
+
+
+
+
+
+# spring:
+#   application:
+#     name: Github-organizations-ms
