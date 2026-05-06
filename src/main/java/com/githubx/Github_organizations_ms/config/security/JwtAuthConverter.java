@@ -12,10 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Extrae roles del claim "realm_access.roles" del JWT (Keycloak).
- * Adaptar si se usa otro proveedor de identidad.
- */
+
 @Component
 public class JwtAuthConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
