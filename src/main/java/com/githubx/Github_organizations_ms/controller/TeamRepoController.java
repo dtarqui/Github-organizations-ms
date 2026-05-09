@@ -1,8 +1,8 @@
 package com.githubx.Github_organizations_ms.controller;
 
-import com.githubx.Github_organizations_ms.dto.request.AddTeamRepoRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrgRepoPageResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamRepoListResponse;
+import com.githubx.Github_organizations_ms.generated.model.AddTeamRepoBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgReposBody;
+import com.githubx.Github_organizations_ms.generated.model.ListTeamReposBody;
 import com.githubx.Github_organizations_ms.service.contratos.TeamRepoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,7 +22,7 @@ public class TeamRepoController {
     @GetMapping("/v1/orgs/{orgName}/teams/{teamId}/repos")
     @Operation(summary = "Lista los repositorios asignados a un equipo",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<TeamRepoListResponse> listTeamRepos(
+    public ResponseEntity<ListTeamReposBody> listTeamRepos(
             @PathVariable String orgName,
             @PathVariable String teamId) {
 
@@ -36,7 +36,7 @@ public class TeamRepoController {
             @PathVariable String orgName,
             @PathVariable String teamId,
             @PathVariable String repoName,
-            @Valid @RequestBody AddTeamRepoRequest request) {
+            @Valid @RequestBody AddTeamRepoBody request) {
 
         teamRepoService.addTeamRepo(orgName, teamId, repoName, request);
         return ResponseEntity.noContent().build();
@@ -56,7 +56,7 @@ public class TeamRepoController {
 
     @GetMapping("/v1/orgs/{orgName}/repos")
     @Operation(summary = "Lista todos los repositorios de la organización")
-    public ResponseEntity<OrgRepoPageResponse> listOrgRepos(
+    public ResponseEntity<ListOrgReposBody> listOrgRepos(
             @PathVariable String orgName,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int perPage) {

@@ -1,9 +1,9 @@
 package com.githubx.Github_organizations_ms.controller;
 
-import com.githubx.Github_organizations_ms.dto.request.AddOrgMemberRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateOrgMemberRoleRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrgMemberListResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrgMemberResponse;
+import com.githubx.Github_organizations_ms.generated.model.AddOrgMemberBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgMembersBody;
+import com.githubx.Github_organizations_ms.generated.model.OrgMemberDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateOrgMemberRoleBody;
 import com.githubx.Github_organizations_ms.service.contratos.OrgMemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,7 +25,7 @@ public class OrgMemberController {
 
     @GetMapping
     @Operation(summary = "Lista todos los miembros de la organización")
-    public ResponseEntity<OrgMemberListResponse> listOrgMembers(
+    public ResponseEntity<ListOrgMembersBody> listOrgMembers(
             @PathVariable String orgName) {
 
         return ResponseEntity.ok(orgMemberService.listOrgMembers(orgName));
@@ -33,9 +33,9 @@ public class OrgMemberController {
 
     @PostMapping
     @Operation(summary = "Agrega un miembro a la organización")
-    public ResponseEntity<OrgMemberResponse> addOrgMember(
+    public ResponseEntity<OrgMemberDTO> addOrgMember(
             @PathVariable String orgName,
-            @Valid @RequestBody AddOrgMemberRequest request) {
+            @Valid @RequestBody AddOrgMemberBody request) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(orgMemberService.addOrgMember(orgName, request));
@@ -43,10 +43,10 @@ public class OrgMemberController {
 
     @PatchMapping("/{username}")
     @Operation(summary = "Cambia el rol de un miembro")
-    public ResponseEntity<OrgMemberResponse> updateOrgMemberRole(
+    public ResponseEntity<OrgMemberDTO> updateOrgMemberRole(
             @PathVariable String orgName,
             @PathVariable String username,
-            @Valid @RequestBody UpdateOrgMemberRoleRequest request) {
+            @Valid @RequestBody UpdateOrgMemberRoleBody request) {
 
         return ResponseEntity.ok(orgMemberService.updateOrgMemberRole(orgName, username, request));
     }

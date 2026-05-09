@@ -5,10 +5,10 @@ import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
 import com.githubx.Github_organizations_ms.dao.TeamDao;
 import com.githubx.Github_organizations_ms.dao.TeamMemberDao;
-import com.githubx.Github_organizations_ms.dto.request.AddOrgMemberRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateOrgMemberRoleRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrgMemberListResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrgMemberResponse;
+import com.githubx.Github_organizations_ms.generated.model.AddOrgMemberBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgMembersBody;
+import com.githubx.Github_organizations_ms.generated.model.OrgMemberDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateOrgMemberRoleBody;
 import com.githubx.Github_organizations_ms.mapper.OrgMemberMapper;
 import com.githubx.Github_organizations_ms.model.OrgMember;
 import com.githubx.Github_organizations_ms.model.OrgMemberRole;
@@ -18,7 +18,6 @@ import com.githubx.Github_organizations_ms.service.contratos.OrgMemberService;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityConflictException;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityNotFoundException;
 import com.githubx.Github_organizations_ms.util.errorhandling.ForbiddenOperationException;
-import com.githubx.Github_organizations_ms.util.errorhandling.InvalidEnumValueException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,53 +40,49 @@ public class OrgMemberServiceImpl implements OrgMemberService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrgMemberListResponse listOrgMembers(String orgName) {
+    public ListOrgMembersBody listOrgMembers(String orgName) {
         Organization org = findOrgOrThrow(orgName);
         assertIsMember(org.getId(), userResolver.getCurrentUserId());
 
-        List<OrgMemberResponse> members = orgMemberDao.findAllByOrganizationId(org.getId())
+        List<OrgMemberDTO> members = orgMemberDao.findAllByOrganizationId(org.getId())
                 .stream()
-                .map(orgMemberMapper::toResponse)
+                .map(orgMemberMapper::toDto)
                 .toList();
 
-        return new OrgMemberListResponse(members);
+        return new ListOrgMembersBody().members(members);
     }
 
     @Override
     @Transactional
-    public OrgMemberResponse addOrgMember(String orgName, AddOrgMemberRequest request) {
+    public OrgMemberDTO addOrgMember(String orgName, AddOrgMemberBody request) {
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgOrThrow(orgName);
 
-        // Solo el owner puede agregar miembros
         assertIsOwner(org, currentUserId);
 
-        // Validar que no sea ya miembro
-        if (orgMemberDao.existsByOrganizationIdAndUsername(org.getId(), request.username())) {
-            throw EntityConflictException.memberAlreadyExists(request.username());
+        if (orgMemberDao.existsByOrganizationIdAndUsername(org.getId(), request.getUsername())) {
+            throw EntityConflictException.memberAlreadyExists(request.getUsername());
         }
 
-        OrgMemberRole role = parseRole(request.role());
+        OrgMemberRole role = OrgMemberRole.valueOf(request.getRole().name());
 
-        // Nota: en un sistema real se consultaría el ms-usuarios para obtener el userId real
-        // Aquí se usa un UUID placeholder que debe reemplazarse con la llamada gRPC/REST al ms-usuarios
         UUID newMemberUserId = UUID.randomUUID(); // TODO: resolver desde ms-usuarios
 
         OrgMember member = OrgMember.builder()
                 .organizationId(org.getId())
                 .userId(newMemberUserId)
-                .username(request.username())
+                .username(request.getUsername())
                 .role(role)
                 .build();
 
         member = orgMemberDao.save(member);
-        log.info("Miembro agregado: {} a organización: {}", request.username(), orgName);
-        return orgMemberMapper.toResponse(member);
+        log.info("Miembro agregado: {} a organización: {}", request.getUsername(), orgName);
+        return orgMemberMapper.toDto(member);
     }
 
     @Override
     @Transactional
-    public OrgMemberResponse updateOrgMemberRole(String orgName, String username, UpdateOrgMemberRoleRequest request) {
+    public OrgMemberDTO updateOrgMemberRole(String orgName, String username, UpdateOrgMemberRoleBody request) {
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgOrThrow(orgName);
 
@@ -96,11 +91,11 @@ public class OrgMemberServiceImpl implements OrgMemberService {
         OrgMember member = orgMemberDao.findByOrganizationIdAndUsername(org.getId(), username)
                 .orElseThrow(() -> EntityNotFoundException.member(username));
 
-        member.setRole(parseRole(request.role()));
+        member.setRole(OrgMemberRole.valueOf(request.getRole().name()));
         member = orgMemberDao.save(member);
 
         log.info("Rol actualizado para: {} en organización: {}", username, orgName);
-        return orgMemberMapper.toResponse(member);
+        return orgMemberMapper.toDto(member);
     }
 
     @Override
@@ -114,7 +109,6 @@ public class OrgMemberServiceImpl implements OrgMemberService {
         OrgMember member = orgMemberDao.findByOrganizationIdAndUsername(org.getId(), username)
                 .orElseThrow(() -> EntityNotFoundException.member(username));
 
-        // Eliminar de todos los equipos de la organización primero
         List<UUID> orgTeamIds = teamDao.findAllByOrganizationId(org.getId())
                 .stream().map(Team::getId).toList();
 
@@ -125,8 +119,6 @@ public class OrgMemberServiceImpl implements OrgMemberService {
         orgMemberDao.deleteByOrganizationIdAndUserId(org.getId(), member.getUserId());
         log.info("Miembro eliminado: {} de organización: {}", username, orgName);
     }
-
-    // ===== Helpers privados =====
 
     private Organization findOrgOrThrow(String orgName) {
         return organizationDao.findByName(orgName)
@@ -142,14 +134,6 @@ public class OrgMemberServiceImpl implements OrgMemberService {
     private void assertIsMember(UUID orgId, UUID userId) {
         if (!orgMemberDao.existsByOrganizationIdAndUserId(orgId, userId)) {
             throw ForbiddenOperationException.notMember();
-        }
-    }
-
-    private OrgMemberRole parseRole(String value) {
-        try {
-            return OrgMemberRole.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidEnumValueException("role", value, "owner, member");
         }
     }
 }

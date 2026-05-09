@@ -1,9 +1,9 @@
 package com.githubx.Github_organizations_ms.controller;
 
-import com.githubx.Github_organizations_ms.dto.request.CreateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationPageResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
+import com.githubx.Github_organizations_ms.generated.model.ListMyOrganizationsBody;
+import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateOrganizationBody;
 import com.githubx.Github_organizations_ms.service.contratos.OrganizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -24,7 +24,7 @@ public class OrganizationController {
     @GetMapping("/v1/user/orgs")
     @Operation(summary = "Lista las organizaciones del usuario autenticado",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<OrganizationPageResponse> listMyOrganizations(
+    public ResponseEntity<ListMyOrganizationsBody> listMyOrganizations(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int perPage) {
 
@@ -34,8 +34,8 @@ public class OrganizationController {
     @PostMapping("/v1/orgs")
     @Operation(summary = "Crea una nueva organización",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<OrganizationResponse> createOrganization(
-            @Valid @RequestBody CreateOrganizationRequest request) {
+    public ResponseEntity<OrganizationDTO> createOrganization(
+            @Valid @RequestBody CreateOrganizationBody request) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(organizationService.createOrganization(request));
@@ -43,7 +43,7 @@ public class OrganizationController {
 
     @GetMapping("/v1/orgs/{orgName}")
     @Operation(summary = "Obtiene los datos públicos de una organización")
-    public ResponseEntity<OrganizationResponse> getOrganization(
+    public ResponseEntity<OrganizationDTO> getOrganization(
             @PathVariable String orgName) {
 
         return ResponseEntity.ok(organizationService.getOrganization(orgName));
@@ -52,9 +52,9 @@ public class OrganizationController {
     @PatchMapping("/v1/orgs/{orgName}")
     @Operation(summary = "Actualiza los datos de la organización",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<OrganizationResponse> updateOrganization(
+    public ResponseEntity<OrganizationDTO> updateOrganization(
             @PathVariable String orgName,
-            @Valid @RequestBody UpdateOrganizationRequest request) {
+            @Valid @RequestBody UpdateOrganizationBody request) {
 
         return ResponseEntity.ok(organizationService.updateOrganization(orgName, request));
     }

@@ -1,14 +1,16 @@
 spring:
+  config:
+    import: optional:file:./.env.properties
   profiles:
-    active: dev 
+    active: dev
   application:
     name: Github-organizations-ms
 
   # ===== DATASOURCE =====
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:githubx_organizations}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgress}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=verify-full&sslrootcert=${SSL_CERT_PATH}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10

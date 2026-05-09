@@ -1,19 +1,19 @@
 package com.githubx.Github_organizations_ms.service.contratos;
 
-import com.githubx.Github_organizations_ms.dto.request.CreateTeamRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateTeamRequest;
-import com.githubx.Github_organizations_ms.dto.response.TeamListResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateTeamBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgTeamsBody;
+import com.githubx.Github_organizations_ms.generated.model.TeamDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateTeamBody;
 
 public interface TeamService {
 
-    TeamListResponse listOrgTeams(String orgName);
+    ListOrgTeamsBody listOrgTeams(String orgName);
 
-    TeamResponse createTeam(String orgName, CreateTeamRequest request);
+    TeamDTO createTeam(String orgName, CreateTeamBody request);
 
-    TeamResponse getTeam(String orgName, String teamId);
+    TeamDTO getTeam(String orgName, String teamId);
 
-    TeamResponse updateTeam(String orgName, String teamId, UpdateTeamRequest request);
+    TeamDTO updateTeam(String orgName, String teamId, UpdateTeamBody request);
 
     void deleteTeam(String orgName, String teamId);
 }

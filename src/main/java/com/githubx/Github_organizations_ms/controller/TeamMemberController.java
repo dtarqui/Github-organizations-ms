@@ -1,6 +1,6 @@
 package com.githubx.Github_organizations_ms.controller;
 
-import com.githubx.Github_organizations_ms.dto.response.TeamMemberListResponse;
+import com.githubx.Github_organizations_ms.generated.model.ListTeamMembersBody;
 import com.githubx.Github_organizations_ms.service.contratos.TeamMemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,7 +20,7 @@ public class TeamMemberController {
 
     @GetMapping
     @Operation(summary = "Lista los miembros de un equipo")
-    public ResponseEntity<TeamMemberListResponse> listTeamMembers(
+    public ResponseEntity<ListTeamMembersBody> listTeamMembers(
             @PathVariable String orgName,
             @PathVariable String teamId) {
 

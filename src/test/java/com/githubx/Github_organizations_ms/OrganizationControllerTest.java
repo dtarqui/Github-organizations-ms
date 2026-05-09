@@ -1,8 +1,9 @@
 package com.githubx.Github_organizations_ms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.githubx.Github_organizations_ms.dto.request.CreateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
+import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
+import com.githubx.Github_organizations_ms.generated.model.OrgVisibility;
 import com.githubx.Github_organizations_ms.service.contratos.OrganizationService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,8 +13,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -32,24 +31,32 @@ class OrganizationControllerTest {
     @MockBean
     private OrganizationService organizationService;
 
-    private OrganizationResponse buildSampleResponse() {
-        return new OrganizationResponse(
-                UUID.randomUUID(), "acme-org", "Acme Organization",
-                "Una organización de prueba", null, "https://acme.com",
-                "public", 1, 0, 0,
-                "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z"
-        );
+    private OrganizationDTO buildSampleResponse() {
+        return new OrganizationDTO()
+                .id("00000000-0000-4000-8000-000000000001")
+                .name("acme-org")
+                .displayName("Acme Organization")
+                .description("Una organización de prueba")
+                .website("https://acme.com")
+                .visibility(OrgVisibility.PUBLIC)
+                .membersCount(1)
+                .reposCount(0)
+                .teamsCount(0)
+                .createdAt("2024-01-01T00:00:00Z")
+                .updatedAt("2024-01-01T00:00:00Z");
     }
 
     @Test
     @WithMockUser
     void debeCrearOrganizacion() throws Exception {
-        OrganizationResponse response = buildSampleResponse();
+        OrganizationDTO response = buildSampleResponse();
         Mockito.when(organizationService.createOrganization(any())).thenReturn(response);
 
-        CreateOrganizationRequest request = new CreateOrganizationRequest(
-                "acme-org", "Acme Organization", "Descripción", null, "public"
-        );
+        CreateOrganizationBody request = new CreateOrganizationBody()
+                .name("acme-org")
+                .displayName("Acme Organization")
+                .description("Descripción")
+                .visibility(OrgVisibility.PUBLIC);
 
         mockMvc.perform(post("/v1/orgs")
                         .with(csrf())
@@ -62,7 +69,7 @@ class OrganizationControllerTest {
 
     @Test
     void debeObtenerOrganizacionSinToken() throws Exception {
-        OrganizationResponse response = buildSampleResponse();
+        OrganizationDTO response = buildSampleResponse();
         Mockito.when(organizationService.getOrganization("acme-org")).thenReturn(response);
 
         mockMvc.perform(get("/v1/orgs/acme-org"))
@@ -73,11 +80,10 @@ class OrganizationControllerTest {
     @Test
     @WithMockUser
     void debeRetornar400SiNombreEsInvalido() throws Exception {
-        CreateOrganizationRequest requestInvalido = new CreateOrganizationRequest(
-                "ab", // muy corto, mínimo 3
-                "Display",
-                null, null, "public"
-        );
+        CreateOrganizationBody requestInvalido = new CreateOrganizationBody()
+                .name("ab") // muy corto, mínimo 3
+                .displayName("Display")
+                .visibility(OrgVisibility.PUBLIC);
 
         mockMvc.perform(post("/v1/orgs")
                         .with(csrf())

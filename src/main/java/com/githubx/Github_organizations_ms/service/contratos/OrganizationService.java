@@ -1,19 +1,19 @@
 package com.githubx.Github_organizations_ms.service.contratos;
 
-import com.githubx.Github_organizations_ms.dto.request.CreateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationPageResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
+import com.githubx.Github_organizations_ms.generated.model.ListMyOrganizationsBody;
+import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateOrganizationBody;
 
 public interface OrganizationService {
 
-    OrganizationPageResponse listMyOrganizations(int page, int perPage);
+    ListMyOrganizationsBody listMyOrganizations(int page, int perPage);
 
-    OrganizationResponse createOrganization(CreateOrganizationRequest request);
+    OrganizationDTO createOrganization(CreateOrganizationBody request);
 
-    OrganizationResponse getOrganization(String orgName);
+    OrganizationDTO getOrganization(String orgName);
 
-    OrganizationResponse updateOrganization(String orgName, UpdateOrganizationRequest request);
+    OrganizationDTO updateOrganization(String orgName, UpdateOrganizationBody request);
 
     void deleteOrganization(String orgName);
 }
