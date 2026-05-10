@@ -3,10 +3,11 @@ package com.githubx.Github_organizations_ms.service;
 import com.githubx.Github_organizations_ms.config.security.AuthenticatedUserResolver;
 import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
-import com.githubx.Github_organizations_ms.dto.request.CreateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
+import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
+import com.githubx.Github_organizations_ms.generated.model.OrgVisibility;
 import com.githubx.Github_organizations_ms.mapper.OrganizationMapper;
-import com.githubx.Github_organizations_ms.model.OrgVisibility;
+import com.githubx.Github_organizations_ms.model.OrgMember;
 import com.githubx.Github_organizations_ms.model.Organization;
 import com.githubx.Github_organizations_ms.service.implementacion.OrganizationServiceImpl;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityConflictException;
@@ -17,12 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,31 +55,38 @@ class OrganizationServiceTest {
                 .id(UUID.randomUUID())
                 .name("acme-org")
                 .displayName("Acme Org")
-                .visibility(OrgVisibility.PUBLIC)
+                .visibility(com.githubx.Github_organizations_ms.model.OrgVisibility.PUBLIC)
                 .ownerId(userId)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
 
         when(organizationDao.save(any(Organization.class))).thenReturn(savedOrg);
-        when(orgMemberDao.save(any())).thenReturn(null);
+        when(orgMemberDao.save(any(OrgMember.class))).thenReturn(null);
+        when(organizationDao.findById(any(UUID.class))).thenReturn(Optional.of(savedOrg));
 
-        OrganizationResponse expectedResponse = new OrganizationResponse(
-                savedOrg.getId(), "acme-org", "Acme Org",
-                null, null, null, "public",
-                1, 0, 0,
-                Instant.now().toString(), Instant.now().toString()
-        );
-        when(organizationMapper.toResponse(any(Organization.class), eq(0))).thenReturn(expectedResponse);
+        OrganizationDTO expectedResponse = new OrganizationDTO()
+                .id(savedOrg.getId().toString())
+                .name("acme-org")
+                .displayName("Acme Org")
+                .visibility(OrgVisibility.PUBLIC)
+                .membersCount(1)
+                .reposCount(0)
+                .teamsCount(0)
+                .createdAt(Instant.now().toString())
+                .updatedAt(Instant.now().toString());
 
-        CreateOrganizationRequest request = new CreateOrganizationRequest(
-                "acme-org", "Acme Org", null, null, "public"
-        );
+        when(organizationMapper.toDto(any(Organization.class), eq(0))).thenReturn(expectedResponse);
 
-        OrganizationResponse result = organizationService.createOrganization(request);
+        CreateOrganizationBody request = new CreateOrganizationBody()
+                .name("acme-org")
+                .displayName("Acme Org")
+                .visibility(OrgVisibility.PUBLIC);
+
+        OrganizationDTO result = organizationService.createOrganization(request);
 
         assertThat(result).isNotNull();
-        assertThat(result.name()).isEqualTo("acme-org");
+        assertThat(result.getName()).isEqualTo("acme-org");
         verify(organizationDao, times(1)).save(any(Organization.class));
     }
 
@@ -88,9 +96,10 @@ class OrganizationServiceTest {
         when(userResolver.getCurrentUsername()).thenReturn("testuser");
         when(organizationDao.existsByName("acme-org")).thenReturn(true);
 
-        CreateOrganizationRequest request = new CreateOrganizationRequest(
-                "acme-org", "Acme Org", null, null, "public"
-        );
+        CreateOrganizationBody request = new CreateOrganizationBody()
+                .name("acme-org")
+                .displayName("Acme Org")
+                .visibility(OrgVisibility.PUBLIC);
 
         assertThatThrownBy(() -> organizationService.createOrganization(request))
                 .isInstanceOf(EntityConflictException.class)

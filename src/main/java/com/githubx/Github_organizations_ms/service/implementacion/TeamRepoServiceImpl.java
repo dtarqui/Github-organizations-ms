@@ -5,12 +5,11 @@ import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
 import com.githubx.Github_organizations_ms.dao.TeamDao;
 import com.githubx.Github_organizations_ms.dao.TeamRepoDao;
-import com.githubx.Github_organizations_ms.dto.request.AddTeamRepoRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrgRepoPageResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrgRepoResponse;
-import com.githubx.Github_organizations_ms.dto.response.PaginationResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamRepoListResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamRepoResponse;
+import com.githubx.Github_organizations_ms.generated.model.AddTeamRepoBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgReposBody;
+import com.githubx.Github_organizations_ms.generated.model.ListTeamReposBody;
+import com.githubx.Github_organizations_ms.generated.model.PaginationMeta;
+import com.githubx.Github_organizations_ms.generated.model.TeamRepoDTO;
 import com.githubx.Github_organizations_ms.mapper.TeamRepoMapper;
 import com.githubx.Github_organizations_ms.model.Organization;
 import com.githubx.Github_organizations_ms.model.Team;
@@ -19,7 +18,6 @@ import com.githubx.Github_organizations_ms.model.TeamRepo;
 import com.githubx.Github_organizations_ms.service.contratos.TeamRepoService;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityNotFoundException;
 import com.githubx.Github_organizations_ms.util.errorhandling.ForbiddenOperationException;
-import com.githubx.Github_organizations_ms.util.errorhandling.InvalidEnumValueException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,31 +40,30 @@ public class TeamRepoServiceImpl implements TeamRepoService {
 
     @Override
     @Transactional(readOnly = true)
-    public TeamRepoListResponse listTeamRepos(String orgName, String teamId) {
+    public ListTeamReposBody listTeamRepos(String orgName, String teamId) {
         Organization org = findOrgOrThrow(orgName);
         assertIsMember(org.getId(), userResolver.getCurrentUserId());
 
         Team team = findTeamOrThrow(teamId, org.getId());
 
-        List<TeamRepoResponse> repos = teamRepoDao.findAllByTeamId(team.getId())
+        List<TeamRepoDTO> repos = teamRepoDao.findAllByTeamId(team.getId())
                 .stream()
-                .map(teamRepoMapper::toResponse)
+                .map(teamRepoMapper::toDto)
                 .toList();
 
-        return new TeamRepoListResponse(repos);
+        return new ListTeamReposBody().repos(repos);
     }
 
     @Override
     @Transactional
-    public void addTeamRepo(String orgName, String teamId, String repoName, AddTeamRepoRequest request) {
+    public void addTeamRepo(String orgName, String teamId, String repoName, AddTeamRepoBody request) {
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgOrThrow(orgName);
         assertIsOwner(org, currentUserId);
 
         Team team = findTeamOrThrow(teamId, org.getId());
-        TeamPermission permission = parsePermission(request.permission());
+        TeamPermission permission = TeamPermission.valueOf(request.getPermission().name());
 
-        // Si ya existe, actualizar permiso (PUT es idempotente)
         TeamRepo teamRepo = teamRepoDao.findByTeamIdAndRepoName(team.getId(), repoName)
                 .orElse(TeamRepo.builder()
                         .teamId(team.getId())
@@ -94,17 +91,21 @@ public class TeamRepoServiceImpl implements TeamRepoService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrgRepoPageResponse listOrgRepos(String orgName, int page, int perPage) {
+    public ListOrgReposBody listOrgRepos(String orgName, int page, int perPage) {
         // Los repositorios viven en otro microservicio.
-        // Este endpoint devuelve una lista vacía hasta integrar ms-repos vía gRPC o REST.
         // TODO: llamar a ms-repos para obtener los repos de la organización.
-        Organization org = findOrgOrThrow(orgName);
+        findOrgOrThrow(orgName);
 
-        PaginationResponse pagination = new PaginationResponse(page, perPage, 0, 0);
-        return new OrgRepoPageResponse(List.of(), pagination);
+        PaginationMeta pagination = new PaginationMeta()
+                .page(page)
+                .perPage(perPage)
+                .total(0)
+                .totalPages(0);
+
+        return new ListOrgReposBody()
+                .repositories(List.of())
+                .pagination(pagination);
     }
-
-    // ===== Helpers privados =====
 
     private Organization findOrgOrThrow(String orgName) {
         return organizationDao.findByName(orgName)
@@ -125,14 +126,6 @@ public class TeamRepoServiceImpl implements TeamRepoService {
     private void assertIsMember(UUID orgId, UUID userId) {
         if (!orgMemberDao.existsByOrganizationIdAndUserId(orgId, userId)) {
             throw ForbiddenOperationException.notMember();
-        }
-    }
-
-    private TeamPermission parsePermission(String value) {
-        try {
-            return TeamPermission.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidEnumValueException("permission", value, "read, write, admin");
         }
     }
 }

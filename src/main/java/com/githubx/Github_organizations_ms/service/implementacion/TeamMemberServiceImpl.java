@@ -5,8 +5,8 @@ import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
 import com.githubx.Github_organizations_ms.dao.TeamDao;
 import com.githubx.Github_organizations_ms.dao.TeamMemberDao;
-import com.githubx.Github_organizations_ms.dto.response.TeamMemberListResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamMemberResponse;
+import com.githubx.Github_organizations_ms.generated.model.ListTeamMembersBody;
+import com.githubx.Github_organizations_ms.generated.model.TeamMemberDTO;
 import com.githubx.Github_organizations_ms.mapper.TeamMemberMapper;
 import com.githubx.Github_organizations_ms.model.OrgMember;
 import com.githubx.Github_organizations_ms.model.Organization;
@@ -38,18 +38,18 @@ public class TeamMemberServiceImpl implements TeamMemberService {
 
     @Override
     @Transactional(readOnly = true)
-    public TeamMemberListResponse listTeamMembers(String orgName, String teamId) {
+    public ListTeamMembersBody listTeamMembers(String orgName, String teamId) {
         Organization org = findOrgOrThrow(orgName);
         assertIsMember(org.getId(), userResolver.getCurrentUserId());
 
         Team team = findTeamOrThrow(teamId, org.getId());
 
-        List<TeamMemberResponse> members = teamMemberDao.findAllByTeamId(team.getId())
+        List<TeamMemberDTO> members = teamMemberDao.findAllByTeamId(team.getId())
                 .stream()
-                .map(teamMemberMapper::toResponse)
+                .map(teamMemberMapper::toDto)
                 .toList();
 
-        return new TeamMemberListResponse(members);
+        return new ListTeamMembersBody().members(members);
     }
 
     @Override
@@ -61,11 +61,9 @@ public class TeamMemberServiceImpl implements TeamMemberService {
 
         Team team = findTeamOrThrow(teamId, org.getId());
 
-        // El usuario debe ser miembro de la organización primero
         OrgMember orgMember = orgMemberDao.findByOrganizationIdAndUsername(org.getId(), username)
                 .orElseThrow(() -> EntityNotFoundException.member(username));
 
-        // Verificar que no sea ya miembro del equipo
         if (teamMemberDao.existsByTeamIdAndUserId(team.getId(), orgMember.getUserId())) {
             throw EntityConflictException.teamMemberAlreadyExists(username);
         }
@@ -96,8 +94,6 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         teamMemberDao.deleteByTeamIdAndUserId(team.getId(), orgMember.getUserId());
         log.info("Miembro: {} eliminado del equipo: {} (organización: {})", username, teamId, orgName);
     }
-
-    // ===== Helpers privados =====
 
     private Organization findOrgOrThrow(String orgName) {
         return organizationDao.findByName(orgName)

@@ -4,10 +4,10 @@ import com.githubx.Github_organizations_ms.config.security.AuthenticatedUserReso
 import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
 import com.githubx.Github_organizations_ms.dao.TeamDao;
-import com.githubx.Github_organizations_ms.dto.request.CreateTeamRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateTeamRequest;
-import com.githubx.Github_organizations_ms.dto.response.TeamListResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateTeamBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgTeamsBody;
+import com.githubx.Github_organizations_ms.generated.model.TeamDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateTeamBody;
 import com.githubx.Github_organizations_ms.mapper.TeamMapper;
 import com.githubx.Github_organizations_ms.model.Organization;
 import com.githubx.Github_organizations_ms.model.Team;
@@ -16,7 +16,6 @@ import com.githubx.Github_organizations_ms.service.contratos.TeamService;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityConflictException;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityNotFoundException;
 import com.githubx.Github_organizations_ms.util.errorhandling.ForbiddenOperationException;
-import com.githubx.Github_organizations_ms.util.errorhandling.InvalidEnumValueException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,58 +37,57 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     @Transactional(readOnly = true)
-    public TeamListResponse listOrgTeams(String orgName) {
+    public ListOrgTeamsBody listOrgTeams(String orgName) {
         Organization org = findOrgOrThrow(orgName);
         assertIsMember(org.getId(), userResolver.getCurrentUserId());
 
-        List<TeamResponse> teams = teamDao.findAllByOrganizationId(org.getId())
+        List<TeamDTO> teams = teamDao.findAllByOrganizationId(org.getId())
                 .stream()
-                .map(teamMapper::toResponse)
+                .map(teamMapper::toDto)
                 .toList();
 
-        return new TeamListResponse(teams);
+        return new ListOrgTeamsBody().teams(teams);
     }
 
     @Override
     @Transactional
-    public TeamResponse createTeam(String orgName, CreateTeamRequest request) {
+    public TeamDTO createTeam(String orgName, CreateTeamBody request) {
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgOrThrow(orgName);
 
         assertIsOwner(org, currentUserId);
 
-        // Nombre único por organización
-        if (teamDao.existsByOrganizationIdAndName(org.getId(), request.name())) {
-            throw EntityConflictException.teamName(request.name());
+        if (teamDao.existsByOrganizationIdAndName(org.getId(), request.getName())) {
+            throw EntityConflictException.teamName(request.getName());
         }
 
-        TeamPermission permission = parsePermission(request.permission());
+        TeamPermission permission = TeamPermission.valueOf(request.getPermission().name());
 
         Team team = Team.builder()
                 .organizationId(org.getId())
-                .name(request.name())
-                .description(request.description())
+                .name(request.getName())
+                .description(request.getDescription())
                 .permission(permission)
                 .build();
 
         team = teamDao.save(team);
-        log.info("Equipo creado: {} en organización: {}", request.name(), orgName);
-        return teamMapper.toResponse(team);
+        log.info("Equipo creado: {} en organización: {}", request.getName(), orgName);
+        return teamMapper.toDto(team);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TeamResponse getTeam(String orgName, String teamId) {
+    public TeamDTO getTeam(String orgName, String teamId) {
         Organization org = findOrgOrThrow(orgName);
         assertIsMember(org.getId(), userResolver.getCurrentUserId());
 
         Team team = findTeamOrThrow(teamId, org.getId());
-        return teamMapper.toResponse(team);
+        return teamMapper.toDto(team);
     }
 
     @Override
     @Transactional
-    public TeamResponse updateTeam(String orgName, String teamId, UpdateTeamRequest request) {
+    public TeamDTO updateTeam(String orgName, String teamId, UpdateTeamBody request) {
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgOrThrow(orgName);
 
@@ -97,13 +95,14 @@ public class TeamServiceImpl implements TeamService {
 
         Team team = findTeamOrThrow(teamId, org.getId());
 
-        if (request.name() != null) team.setName(request.name());
-        if (request.description() != null) team.setDescription(request.description());
-        if (request.permission() != null) team.setPermission(parsePermission(request.permission()));
+        if (request.getName() != null) team.setName(request.getName());
+        if (request.getDescription() != null) team.setDescription(request.getDescription());
+        if (request.getPermission() != null)
+            team.setPermission(TeamPermission.valueOf(request.getPermission().name()));
 
         team = teamDao.save(team);
         log.info("Equipo actualizado: {} en organización: {}", teamId, orgName);
-        return teamMapper.toResponse(team);
+        return teamMapper.toDto(team);
     }
 
     @Override
@@ -118,8 +117,6 @@ public class TeamServiceImpl implements TeamService {
         teamDao.delete(team);
         log.info("Equipo eliminado: {} de organización: {}", teamId, orgName);
     }
-
-    // ===== Helpers privados =====
 
     private Organization findOrgOrThrow(String orgName) {
         return organizationDao.findByName(orgName)
@@ -140,14 +137,6 @@ public class TeamServiceImpl implements TeamService {
     private void assertIsMember(UUID orgId, UUID userId) {
         if (!orgMemberDao.existsByOrganizationIdAndUserId(orgId, userId)) {
             throw ForbiddenOperationException.notMember();
-        }
-    }
-
-    private TeamPermission parsePermission(String value) {
-        try {
-            return TeamPermission.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidEnumValueException("permission", value, "read, write, admin");
         }
     }
 }

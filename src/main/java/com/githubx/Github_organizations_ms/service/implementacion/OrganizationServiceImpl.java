@@ -3,11 +3,11 @@ package com.githubx.Github_organizations_ms.service.implementacion;
 import com.githubx.Github_organizations_ms.config.security.AuthenticatedUserResolver;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
 import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
-import com.githubx.Github_organizations_ms.dto.request.CreateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateOrganizationRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationPageResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrganizationResponse;
-import com.githubx.Github_organizations_ms.dto.response.PaginationResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
+import com.githubx.Github_organizations_ms.generated.model.ListMyOrganizationsBody;
+import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
+import com.githubx.Github_organizations_ms.generated.model.PaginationMeta;
+import com.githubx.Github_organizations_ms.generated.model.UpdateOrganizationBody;
 import com.githubx.Github_organizations_ms.mapper.OrganizationMapper;
 import com.githubx.Github_organizations_ms.model.OrgMember;
 import com.githubx.Github_organizations_ms.model.OrgMemberRole;
@@ -17,7 +17,6 @@ import com.githubx.Github_organizations_ms.service.contratos.OrganizationService
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityConflictException;
 import com.githubx.Github_organizations_ms.util.errorhandling.EntityNotFoundException;
 import com.githubx.Github_organizations_ms.util.errorhandling.ForbiddenOperationException;
-import com.githubx.Github_organizations_ms.util.errorhandling.InvalidEnumValueException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,91 +39,91 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrganizationPageResponse listMyOrganizations(int page, int perPage) {
+    public ListMyOrganizationsBody listMyOrganizations(int page, int perPage) {
         UUID currentUserId = userResolver.getCurrentUserId();
         PageRequest pageRequest = PageRequest.of(page - 1, perPage);
 
         Page<Organization> orgPage = organizationDao.findAllByMemberUserId(currentUserId, pageRequest);
 
-        List<OrganizationResponse> organizations = orgPage.getContent().stream()
-                .map(org -> organizationMapper.toResponse(org, 0)) // reposCount: consultar ms-repos en el futuro
+        List<OrganizationDTO> organizations = orgPage.getContent().stream()
+                .map(org -> organizationMapper.toDto(org, 0))
                 .toList();
 
-        PaginationResponse pagination = new PaginationResponse(
-                page, perPage, orgPage.getTotalElements(), orgPage.getTotalPages()
-        );
+        PaginationMeta pagination = new PaginationMeta()
+                .page(page)
+                .perPage(perPage)
+                .total((int) orgPage.getTotalElements())
+                .totalPages(orgPage.getTotalPages());
 
-        return new OrganizationPageResponse(organizations, pagination);
-    }
-
-    @Override
-@Transactional
-public OrganizationResponse createOrganization(CreateOrganizationRequest request) {
-    UUID currentUserId = userResolver.getCurrentUserId();
-    String currentUsername = userResolver.getCurrentUsername();
-
-    OrgVisibility visibility = parseVisibility(request.visibility());
-
-    if (organizationDao.existsByName(request.name())) {
-        throw EntityConflictException.organizationName(request.name());
-    }
-
-    Organization org = Organization.builder()
-            .name(request.name())
-            .displayName(request.displayName())
-            .description(request.description())
-            .website(request.website())
-            .visibility(visibility)
-            .ownerId(currentUserId)
-            .build();
-
-    org = organizationDao.save(org);
-
-    OrgMember ownerMember = OrgMember.builder()
-            .organizationId(org.getId())
-            .userId(currentUserId)
-            .username(currentUsername)
-            .role(OrgMemberRole.OWNER)
-            .build();
-
-    orgMemberDao.save(ownerMember);
-
-    // Flush para que Hibernate limpie la sesión y recargue correctamente
-    organizationDao.flush();
-
-    // Recargar la entidad fresca desde BD con timestamps populados
-    org = organizationDao.findById(org.getId()).orElseThrow();
-
-    log.info("Organización creada: {} por usuario: {}", org.getName(), currentUsername);
-    return organizationMapper.toResponse(org, 0);
-}
-
-    @Override
-    @Transactional(readOnly = true)
-    public OrganizationResponse getOrganization(String orgName) {
-        Organization org = findOrgByNameOrThrow(orgName);
-        return organizationMapper.toResponse(org, 0);
+        return new ListMyOrganizationsBody()
+                .organizations(organizations)
+                .pagination(pagination);
     }
 
     @Override
     @Transactional
-    public OrganizationResponse updateOrganization(String orgName, UpdateOrganizationRequest request) {
+    public OrganizationDTO createOrganization(CreateOrganizationBody request) {
+        UUID currentUserId = userResolver.getCurrentUserId();
+        String currentUsername = userResolver.getCurrentUsername();
+
+        OrgVisibility visibility = OrgVisibility.valueOf(request.getVisibility().name());
+
+        if (organizationDao.existsByName(request.getName())) {
+            throw EntityConflictException.organizationName(request.getName());
+        }
+
+        Organization org = Organization.builder()
+                .name(request.getName())
+                .displayName(request.getDisplayName())
+                .description(request.getDescription())
+                .website(request.getWebsite())
+                .visibility(visibility)
+                .ownerId(currentUserId)
+                .build();
+
+        org = organizationDao.save(org);
+
+        OrgMember ownerMember = OrgMember.builder()
+                .organizationId(org.getId())
+                .userId(currentUserId)
+                .username(currentUsername)
+                .role(OrgMemberRole.OWNER)
+                .build();
+
+        orgMemberDao.save(ownerMember);
+
+        organizationDao.flush();
+        org = organizationDao.findById(org.getId()).orElseThrow();
+
+        log.info("Organización creada: {} por usuario: {}", org.getName(), currentUsername);
+        return organizationMapper.toDto(org, 0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrganizationDTO getOrganization(String orgName) {
+        Organization org = findOrgByNameOrThrow(orgName);
+        return organizationMapper.toDto(org, 0);
+    }
+
+    @Override
+    @Transactional
+    public OrganizationDTO updateOrganization(String orgName, UpdateOrganizationBody request) {
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgByNameOrThrow(orgName);
 
-        // Solo el owner puede actualizar
         assertIsOwner(org, currentUserId);
 
-        // Aplicar cambios solo si el campo no es null (PATCH semántico)
-        if (request.displayName() != null) org.setDisplayName(request.displayName());
-        if (request.description() != null) org.setDescription(request.description());
-        if (request.website() != null) org.setWebsite(request.website());
-        if (request.avatarUrl() != null) org.setAvatarUrl(request.avatarUrl());
-        if (request.visibility() != null) org.setVisibility(parseVisibility(request.visibility()));
+        if (request.getDisplayName() != null) org.setDisplayName(request.getDisplayName());
+        if (request.getDescription() != null) org.setDescription(request.getDescription());
+        if (request.getWebsite() != null) org.setWebsite(request.getWebsite());
+        if (request.getAvatarUrl() != null) org.setAvatarUrl(request.getAvatarUrl());
+        if (request.getVisibility() != null)
+            org.setVisibility(OrgVisibility.valueOf(request.getVisibility().name()));
 
         org = organizationDao.save(org);
         log.info("Organización actualizada: {}", orgName);
-        return organizationMapper.toResponse(org, 0);
+        return organizationMapper.toDto(org, 0);
     }
 
     @Override
@@ -133,14 +132,11 @@ public OrganizationResponse createOrganization(CreateOrganizationRequest request
         UUID currentUserId = userResolver.getCurrentUserId();
         Organization org = findOrgByNameOrThrow(orgName);
 
-        // Solo el owner puede eliminar
         assertIsOwner(org, currentUserId);
 
         organizationDao.delete(org);
         log.info("Organización eliminada: {}", orgName);
     }
-
-    // ===== Helpers privados =====
 
     private Organization findOrgByNameOrThrow(String orgName) {
         return organizationDao.findByName(orgName)
@@ -150,14 +146,6 @@ public OrganizationResponse createOrganization(CreateOrganizationRequest request
     private void assertIsOwner(Organization org, UUID userId) {
         if (!org.getOwnerId().equals(userId)) {
             throw ForbiddenOperationException.notOwner();
-        }
-    }
-
-    private OrgVisibility parseVisibility(String value) {
-        try {
-            return OrgVisibility.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidEnumValueException("visibility", value, "public, private");
         }
     }
 }

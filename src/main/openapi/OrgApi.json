@@ -1,0 +1,257 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "OrgApi",
+    "version": "1.0.0",
+    "description": "Microservicio de organizaciones para Mini-GitHub"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+
+      "OrgVisibility": {
+        "type": "string",
+        "enum": ["public", "private"]
+      },
+
+      "OrgMemberRole": {
+        "type": "string",
+        "enum": ["owner", "member"]
+      },
+
+      "TeamPermission": {
+        "type": "string",
+        "enum": ["read", "write", "admin"]
+      },
+
+      "PaginationMeta": {
+        "type": "object",
+        "required": ["page", "perPage", "total", "totalPages"],
+        "properties": {
+          "page":       { "type": "integer", "format": "int32" },
+          "perPage":    { "type": "integer", "format": "int32" },
+          "total":      { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" }
+        }
+      },
+
+      "OrganizationDTO": {
+        "type": "object",
+        "required": ["id", "name", "displayName", "visibility", "membersCount", "reposCount", "teamsCount", "createdAt", "updatedAt"],
+        "properties": {
+          "id":           { "type": "string" },
+          "name":         { "type": "string", "minLength": 3, "maxLength": 50 },
+          "displayName":  { "type": "string", "minLength": 1, "maxLength": 100 },
+          "description":  { "type": "string" },
+          "avatarUrl":    { "type": "string", "maxLength": 500 },
+          "website":      { "type": "string", "maxLength": 500 },
+          "visibility":   { "$ref": "#/components/schemas/OrgVisibility" },
+          "membersCount": { "type": "integer", "format": "int32" },
+          "reposCount":   { "type": "integer", "format": "int32" },
+          "teamsCount":   { "type": "integer", "format": "int32" },
+          "createdAt":    { "type": "string" },
+          "updatedAt":    { "type": "string" }
+        }
+      },
+
+      "OrgMemberDTO": {
+        "type": "object",
+        "required": ["userId", "username", "role", "joinedAt"],
+        "properties": {
+          "userId":    { "type": "string" },
+          "username":  { "type": "string" },
+          "avatarUrl": { "type": "string" },
+          "role":      { "$ref": "#/components/schemas/OrgMemberRole" },
+          "joinedAt":  { "type": "string" }
+        }
+      },
+
+      "TeamDTO": {
+        "type": "object",
+        "required": ["id", "orgId", "name", "permission", "membersCount", "reposCount", "createdAt"],
+        "properties": {
+          "id":           { "type": "string" },
+          "orgId":        { "type": "string" },
+          "name":         { "type": "string", "minLength": 1, "maxLength": 50 },
+          "description":  { "type": "string" },
+          "permission":   { "$ref": "#/components/schemas/TeamPermission" },
+          "membersCount": { "type": "integer", "format": "int32" },
+          "reposCount":   { "type": "integer", "format": "int32" },
+          "createdAt":    { "type": "string" }
+        }
+      },
+
+      "TeamMemberDTO": {
+        "type": "object",
+        "required": ["userId", "username", "addedAt"],
+        "properties": {
+          "userId":    { "type": "string" },
+          "username":  { "type": "string" },
+          "avatarUrl": { "type": "string" },
+          "addedAt":   { "type": "string" }
+        }
+      },
+
+      "TeamRepoDTO": {
+        "type": "object",
+        "required": ["repoId", "repoName", "fullName", "permission", "assignedAt"],
+        "properties": {
+          "repoId":      { "type": "string" },
+          "repoName":    { "type": "string" },
+          "fullName":    { "type": "string" },
+          "permission":  { "$ref": "#/components/schemas/TeamPermission" },
+          "assignedAt":  { "type": "string" }
+        }
+      },
+
+      "OrgRepoSummary": {
+        "type": "object",
+        "required": ["id", "name", "fullName", "starsCount", "updatedAt"],
+        "properties": {
+          "id":          { "type": "string" },
+          "name":        { "type": "string" },
+          "fullName":    { "type": "string" },
+          "description": { "type": "string" },
+          "starsCount":  { "type": "integer", "format": "int32" },
+          "updatedAt":   { "type": "string" }
+        }
+      },
+
+      "ListMyOrganizationsBody": {
+        "type": "object",
+        "required": ["organizations", "pagination"],
+        "properties": {
+          "organizations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrganizationDTO" }
+          },
+          "pagination": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
+      },
+
+      "CreateOrganizationBody": {
+        "type": "object",
+        "required": ["name", "displayName", "visibility"],
+        "properties": {
+          "name":        { "type": "string", "minLength": 3, "maxLength": 50 },
+          "displayName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "description": { "type": "string" },
+          "website":     { "type": "string" },
+          "visibility":  { "$ref": "#/components/schemas/OrgVisibility" }
+        }
+      },
+
+      "UpdateOrganizationBody": {
+        "type": "object",
+        "properties": {
+          "displayName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "description": { "type": "string" },
+          "website":     { "type": "string" },
+          "avatarUrl":   { "type": "string" },
+          "visibility":  { "$ref": "#/components/schemas/OrgVisibility" }
+        }
+      },
+
+      "ListOrgMembersBody": {
+        "type": "object",
+        "required": ["members"],
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrgMemberDTO" }
+          }
+        }
+      },
+
+      "AddOrgMemberBody": {
+        "type": "object",
+        "required": ["username", "role"],
+        "properties": {
+          "username": { "type": "string" },
+          "role":     { "$ref": "#/components/schemas/OrgMemberRole" }
+        }
+      },
+
+      "UpdateOrgMemberRoleBody": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": { "$ref": "#/components/schemas/OrgMemberRole" }
+        }
+      },
+
+      "ListOrgTeamsBody": {
+        "type": "object",
+        "required": ["teams"],
+        "properties": {
+          "teams": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TeamDTO" }
+          }
+        }
+      },
+
+      "CreateTeamBody": {
+        "type": "object",
+        "required": ["name", "permission"],
+        "properties": {
+          "name":        { "type": "string", "minLength": 1, "maxLength": 50 },
+          "description": { "type": "string" },
+          "permission":  { "$ref": "#/components/schemas/TeamPermission" }
+        }
+      },
+
+      "UpdateTeamBody": {
+        "type": "object",
+        "properties": {
+          "name":        { "type": "string", "minLength": 1, "maxLength": 50 },
+          "description": { "type": "string" },
+          "permission":  { "$ref": "#/components/schemas/TeamPermission" }
+        }
+      },
+
+      "ListTeamMembersBody": {
+        "type": "object",
+        "required": ["members"],
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TeamMemberDTO" }
+          }
+        }
+      },
+
+      "AddTeamRepoBody": {
+        "type": "object",
+        "required": ["permission"],
+        "properties": {
+          "permission": { "$ref": "#/components/schemas/TeamPermission" }
+        }
+      },
+
+      "ListTeamReposBody": {
+        "type": "object",
+        "required": ["repos"],
+        "properties": {
+          "repos": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TeamRepoDTO" }
+          }
+        }
+      },
+
+      "ListOrgReposBody": {
+        "type": "object",
+        "required": ["repositories", "pagination"],
+        "properties": {
+          "repositories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrgRepoSummary" }
+          },
+          "pagination": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
+      }
+
+    }
+  }
+}

@@ -1,9 +1,9 @@
 package com.githubx.Github_organizations_ms.controller;
 
-import com.githubx.Github_organizations_ms.dto.request.CreateTeamRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateTeamRequest;
-import com.githubx.Github_organizations_ms.dto.response.TeamListResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamResponse;
+import com.githubx.Github_organizations_ms.generated.model.CreateTeamBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgTeamsBody;
+import com.githubx.Github_organizations_ms.generated.model.TeamDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateTeamBody;
 import com.githubx.Github_organizations_ms.service.contratos.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,7 +25,7 @@ public class TeamController {
 
     @GetMapping
     @Operation(summary = "Lista todos los equipos de la organización")
-    public ResponseEntity<TeamListResponse> listOrgTeams(
+    public ResponseEntity<ListOrgTeamsBody> listOrgTeams(
             @PathVariable String orgName) {
 
         return ResponseEntity.ok(teamService.listOrgTeams(orgName));
@@ -33,9 +33,9 @@ public class TeamController {
 
     @PostMapping
     @Operation(summary = "Crea un nuevo equipo dentro de la organización")
-    public ResponseEntity<TeamResponse> createTeam(
+    public ResponseEntity<TeamDTO> createTeam(
             @PathVariable String orgName,
-            @Valid @RequestBody CreateTeamRequest request) {
+            @Valid @RequestBody CreateTeamBody request) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(teamService.createTeam(orgName, request));
@@ -43,7 +43,7 @@ public class TeamController {
 
     @GetMapping("/{teamId}")
     @Operation(summary = "Obtiene los datos de un equipo específico")
-    public ResponseEntity<TeamResponse> getTeam(
+    public ResponseEntity<TeamDTO> getTeam(
             @PathVariable String orgName,
             @PathVariable String teamId) {
 
@@ -52,10 +52,10 @@ public class TeamController {
 
     @PatchMapping("/{teamId}")
     @Operation(summary = "Actualiza el nombre, descripción o permisos de un equipo")
-    public ResponseEntity<TeamResponse> updateTeam(
+    public ResponseEntity<TeamDTO> updateTeam(
             @PathVariable String orgName,
             @PathVariable String teamId,
-            @Valid @RequestBody UpdateTeamRequest request) {
+            @Valid @RequestBody UpdateTeamBody request) {
 
         return ResponseEntity.ok(teamService.updateTeam(orgName, teamId, request));
     }

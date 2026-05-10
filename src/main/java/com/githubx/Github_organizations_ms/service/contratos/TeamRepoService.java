@@ -1,16 +1,16 @@
 package com.githubx.Github_organizations_ms.service.contratos;
 
-import com.githubx.Github_organizations_ms.dto.request.AddTeamRepoRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrgRepoPageResponse;
-import com.githubx.Github_organizations_ms.dto.response.TeamRepoListResponse;
+import com.githubx.Github_organizations_ms.generated.model.AddTeamRepoBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgReposBody;
+import com.githubx.Github_organizations_ms.generated.model.ListTeamReposBody;
 
 public interface TeamRepoService {
 
-    TeamRepoListResponse listTeamRepos(String orgName, String teamId);
+    ListTeamReposBody listTeamRepos(String orgName, String teamId);
 
-    void addTeamRepo(String orgName, String teamId, String repoName, AddTeamRepoRequest request);
+    void addTeamRepo(String orgName, String teamId, String repoName, AddTeamRepoBody request);
 
     void removeTeamRepo(String orgName, String teamId, String repoName);
 
-    OrgRepoPageResponse listOrgRepos(String orgName, int page, int perPage);
+    ListOrgReposBody listOrgRepos(String orgName, int page, int perPage);
 }

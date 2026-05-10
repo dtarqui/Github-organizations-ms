@@ -1,17 +1,17 @@
 package com.githubx.Github_organizations_ms.service.contratos;
 
-import com.githubx.Github_organizations_ms.dto.request.AddOrgMemberRequest;
-import com.githubx.Github_organizations_ms.dto.request.UpdateOrgMemberRoleRequest;
-import com.githubx.Github_organizations_ms.dto.response.OrgMemberListResponse;
-import com.githubx.Github_organizations_ms.dto.response.OrgMemberResponse;
+import com.githubx.Github_organizations_ms.generated.model.AddOrgMemberBody;
+import com.githubx.Github_organizations_ms.generated.model.ListOrgMembersBody;
+import com.githubx.Github_organizations_ms.generated.model.OrgMemberDTO;
+import com.githubx.Github_organizations_ms.generated.model.UpdateOrgMemberRoleBody;
 
 public interface OrgMemberService {
 
-    OrgMemberListResponse listOrgMembers(String orgName);
+    ListOrgMembersBody listOrgMembers(String orgName);
 
-    OrgMemberResponse addOrgMember(String orgName, AddOrgMemberRequest request);
+    OrgMemberDTO addOrgMember(String orgName, AddOrgMemberBody request);
 
-    OrgMemberResponse updateOrgMemberRole(String orgName, String username, UpdateOrgMemberRoleRequest request);
+    OrgMemberDTO updateOrgMemberRole(String orgName, String username, UpdateOrgMemberRoleBody request);
 
     void removeOrgMember(String orgName, String username);
 }
