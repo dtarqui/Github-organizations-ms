@@ -1,0 +1,371 @@
+syntax = "proto3";
+
+package com.minigithub.grpc;
+
+option java_package = "com.minigithub.grpc.proto";
+option java_outer_classname = "OrgServiceProto";
+option java_multiple_files = true;
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum OrgVisibility {
+  ORG_VISIBILITY_UNSPECIFIED = 0;
+  ORG_VISIBILITY_PUBLIC = 1;
+  ORG_VISIBILITY_PRIVATE = 2;
+}
+
+enum OrgMemberRole {
+  ORG_MEMBER_ROLE_UNSPECIFIED = 0;
+  ORG_MEMBER_ROLE_OWNER = 1;
+  ORG_MEMBER_ROLE_MEMBER = 2;
+}
+
+enum TeamPermission {
+  TEAM_PERMISSION_UNSPECIFIED = 0;
+  TEAM_PERMISSION_READ = 1;
+  TEAM_PERMISSION_WRITE = 2;
+  TEAM_PERMISSION_ADMIN = 3;
+}
+
+// ─────────────────────────────────────────────────────────────
+// COMMON MESSAGES
+// ─────────────────────────────────────────────────────────────
+
+message PaginationMeta {
+  int32 page = 1;
+  int32 per_page = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+}
+
+message PaginationRequest {
+  int32 page = 1;
+  int32 per_page = 2;
+}
+
+// ─────────────────────────────────────────────────────────────
+// ORGANIZATION MESSAGES
+// ─────────────────────────────────────────────────────────────
+
+message OrganizationDTO {
+  string id = 1;
+  string name = 2;
+  string display_name = 3;
+  string description = 4;
+  string avatar_url = 5;
+  string website = 6;
+  OrgVisibility visibility = 7;
+  int32 members_count = 8;
+  int32 repos_count = 9;
+  int32 teams_count = 10;
+  string created_at = 11;
+  string updated_at = 12;
+}
+
+message OrgMemberDTO {
+  string user_id = 1;
+  string username = 2;
+  string avatar_url = 3;
+  OrgMemberRole role = 4;
+  string joined_at = 5;
+}
+
+// ─── Org CRUD ─────────────────────────────────────────────────
+
+message GetOrganizationRequest {
+  string org_name = 1;
+}
+
+message GetOrganizationResponse {
+  OrganizationDTO organization = 1;
+}
+
+message ListMyOrganizationsRequest {
+  PaginationRequest pagination = 1;
+}
+
+message ListMyOrganizationsResponse {
+  repeated OrganizationDTO organizations = 1;
+  PaginationMeta pagination = 2;
+}
+
+message CreateOrganizationRequest {
+  string name = 1;
+  string display_name = 2;
+  string description = 3;
+  string website = 4;
+  OrgVisibility visibility = 5;
+}
+
+message CreateOrganizationResponse {
+  OrganizationDTO organization = 1;
+}
+
+message UpdateOrganizationRequest {
+  string org_name = 1;
+  string display_name = 2;
+  string description = 3;
+  string website = 4;
+  string avatar_url = 5;
+  OrgVisibility visibility = 6;
+}
+
+message UpdateOrganizationResponse {
+  OrganizationDTO organization = 1;
+}
+
+message DeleteOrganizationRequest {
+  string org_name = 1;
+}
+
+message DeleteOrganizationResponse {
+  bool success = 1;
+}
+
+// ─── Org Members ──────────────────────────────────────────────
+
+message ListOrgMembersRequest {
+  string org_name = 1;
+}
+
+message ListOrgMembersResponse {
+  repeated OrgMemberDTO members = 1;
+}
+
+message AddOrgMemberRequest {
+  string org_name = 1;
+  string username = 2;
+  OrgMemberRole role = 3;
+}
+
+message AddOrgMemberResponse {
+  OrgMemberDTO member = 1;
+}
+
+message UpdateOrgMemberRoleRequest {
+  string org_name = 1;
+  string username = 2;
+  OrgMemberRole role = 3;
+}
+
+message UpdateOrgMemberRoleResponse {
+  OrgMemberDTO member = 1;
+}
+
+message RemoveOrgMemberRequest {
+  string org_name = 1;
+  string username = 2;
+}
+
+message RemoveOrgMemberResponse {
+  bool success = 1;
+}
+
+// ─────────────────────────────────────────────────────────────
+// TEAM MESSAGES
+// ─────────────────────────────────────────────────────────────
+
+message TeamDTO {
+  string id = 1;
+  string org_id = 2;
+  string name = 3;
+  string description = 4;
+  TeamPermission permission = 5;
+  int32 members_count = 6;
+  int32 repos_count = 7;
+  string created_at = 8;
+}
+
+message TeamMemberDTO {
+  string user_id = 1;
+  string username = 2;
+  string avatar_url = 3;
+  string added_at = 4;
+}
+
+message TeamRepoDTO {
+  string repo_id = 1;
+  string repo_name = 2;
+  string full_name = 3;
+  TeamPermission permission = 4;
+  string assigned_at = 5;
+}
+
+// ─── Teams CRUD ───────────────────────────────────────────────
+
+message ListOrgTeamsRequest {
+  string org_name = 1;
+}
+
+message ListOrgTeamsResponse {
+  repeated TeamDTO teams = 1;
+}
+
+message CreateTeamRequest {
+  string org_name = 1;
+  string name = 2;
+  string description = 3;
+  TeamPermission permission = 4;
+}
+
+message CreateTeamResponse {
+  TeamDTO team = 1;
+}
+
+message GetTeamRequest {
+  string org_name = 1;
+  string team_id = 2;
+}
+
+message GetTeamResponse {
+  TeamDTO team = 1;
+}
+
+message UpdateTeamRequest {
+  string org_name = 1;
+  string team_id = 2;
+  string name = 3;
+  string description = 4;
+  TeamPermission permission = 5;
+}
+
+message UpdateTeamResponse {
+  TeamDTO team = 1;
+}
+
+message DeleteTeamRequest {
+  string org_name = 1;
+  string team_id = 2;
+}
+
+message DeleteTeamResponse {
+  bool success = 1;
+}
+
+// ─── Team Members ─────────────────────────────────────────────
+
+message ListTeamMembersRequest {
+  string org_name = 1;
+  string team_id = 2;
+}
+
+message ListTeamMembersResponse {
+  repeated TeamMemberDTO members = 1;
+}
+
+message AddTeamMemberRequest {
+  string org_name = 1;
+  string team_id = 2;
+  string username = 3;
+}
+
+message AddTeamMemberResponse {
+  bool success = 1;
+}
+
+message RemoveTeamMemberRequest {
+  string org_name = 1;
+  string team_id = 2;
+  string username = 3;
+}
+
+message RemoveTeamMemberResponse {
+  bool success = 1;
+}
+
+// ─── Team Repos ───────────────────────────────────────────────
+
+message ListTeamReposRequest {
+  string org_name = 1;
+  string team_id = 2;
+}
+
+message ListTeamReposResponse {
+  repeated TeamRepoDTO repos = 1;
+}
+
+message AddTeamRepoRequest {
+  string org_name = 1;
+  string team_id = 2;
+  string repo_name = 3;
+  TeamPermission permission = 4;
+}
+
+message AddTeamRepoResponse {
+  bool success = 1;
+}
+
+message RemoveTeamRepoRequest {
+  string org_name = 1;
+  string team_id = 2;
+  string repo_name = 3;
+}
+
+message RemoveTeamRepoResponse {
+  bool success = 1;
+}
+
+// ─── Org Repos ────────────────────────────────────────────────
+
+message OrgRepoSummary {
+  string id = 1;
+  string name = 2;
+  string full_name = 3;
+  string description = 4;
+  int32 stars_count = 5;
+  string updated_at = 6;
+}
+
+message ListOrgReposRequest {
+  string org_name = 1;
+  PaginationRequest pagination = 2;
+}
+
+message ListOrgReposResponse {
+  repeated OrgRepoSummary repositories = 1;
+  PaginationMeta pagination = 2;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SERVICES
+// ─────────────────────────────────────────────────────────────
+
+// OrgPublicApi — lectura pública, sin autenticación
+service OrgPublicService {
+  rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse);
+  rpc ListOrgRepos(ListOrgReposRequest) returns (ListOrgReposResponse);
+}
+
+// OrgApi — operaciones protegidas, requiere JWT en metadata
+service OrgService {
+  // Organizaciones
+  rpc ListMyOrganizations(ListMyOrganizationsRequest) returns (ListMyOrganizationsResponse);
+  rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse);
+  rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationResponse);
+  rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse);
+
+  // Miembros de la organización
+  rpc ListOrgMembers(ListOrgMembersRequest) returns (ListOrgMembersResponse);
+  rpc AddOrgMember(AddOrgMemberRequest) returns (AddOrgMemberResponse);
+  rpc UpdateOrgMemberRole(UpdateOrgMemberRoleRequest) returns (UpdateOrgMemberRoleResponse);
+  rpc RemoveOrgMember(RemoveOrgMemberRequest) returns (RemoveOrgMemberResponse);
+
+  // Equipos
+  rpc ListOrgTeams(ListOrgTeamsRequest) returns (ListOrgTeamsResponse);
+  rpc CreateTeam(CreateTeamRequest) returns (CreateTeamResponse);
+  rpc GetTeam(GetTeamRequest) returns (GetTeamResponse);
+  rpc UpdateTeam(UpdateTeamRequest) returns (UpdateTeamResponse);
+  rpc DeleteTeam(DeleteTeamRequest) returns (DeleteTeamResponse);
+
+  // Miembros del equipo
+  rpc ListTeamMembers(ListTeamMembersRequest) returns (ListTeamMembersResponse);
+  rpc AddTeamMember(AddTeamMemberRequest) returns (AddTeamMemberResponse);
+  rpc RemoveTeamMember(RemoveTeamMemberRequest) returns (RemoveTeamMemberResponse);
+
+  // Repositorios del equipo
+  rpc ListTeamRepos(ListTeamReposRequest) returns (ListTeamReposResponse);
+  rpc AddTeamRepo(AddTeamRepoRequest) returns (AddTeamRepoResponse);
+  rpc RemoveTeamRepo(RemoveTeamRepoRequest) returns (RemoveTeamRepoResponse);
+}
