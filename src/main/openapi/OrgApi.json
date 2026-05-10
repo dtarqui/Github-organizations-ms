@@ -16,7 +16,7 @@
 
       "OrgMemberRole": {
         "type": "string",
-        "enum": ["owner", "member"]
+        "enum": ["owner", "member", "developer"]
       },
 
       "TeamPermission": {

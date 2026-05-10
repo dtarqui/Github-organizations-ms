@@ -8,6 +8,8 @@ enum OrgMemberRole {
     OWNER  = "owner"
     /// Miembro regular: acceso según equipos asignados
     MEMBER = "member"
+    /// Desarrollador: acceso de desarrollo según equipos asignados
+    DEVELOPER = "developer"
 }
 
 /// Nivel de permisos de un equipo sobre los repositorios asignados

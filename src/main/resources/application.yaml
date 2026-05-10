@@ -66,6 +66,11 @@ springdoc:
     version: 1.0.0
     description: Microservicio de gestión de organizaciones, equipos y miembros
 
+# ===== gRPC =====
+grpc:
+  server:
+    port: ${GRPC_PORT:9090}
+
 # ===== LOGGING =====
 logging:
   level:

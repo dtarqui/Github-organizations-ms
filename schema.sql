@@ -5,7 +5,7 @@
 -- ===== TIPOS ENUM =====
 
 CREATE TYPE org_visibility AS ENUM ('PUBLIC', 'PRIVATE');
-CREATE TYPE org_member_role AS ENUM ('OWNER', 'MEMBER');
+CREATE TYPE org_member_role AS ENUM ('OWNER', 'MEMBER', 'DEVELOPER');
 CREATE TYPE team_permission AS ENUM ('READ', 'WRITE', 'ADMIN');
 
 -- ===== TABLA: organizations =====
