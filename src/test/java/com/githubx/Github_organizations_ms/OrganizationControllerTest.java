@@ -68,6 +68,7 @@ class OrganizationControllerTest {
     }
 
     @Test
+    @WithMockUser
     void debeObtenerOrganizacionSinToken() throws Exception {
         OrganizationDTO response = buildSampleResponse();
         Mockito.when(organizationService.getOrganization("acme-org")).thenReturn(response);
