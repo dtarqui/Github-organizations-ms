@@ -86,9 +86,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./mvnw -B verify sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+          -Dsonar.organization=Savitar465
           -Dsonar.projectKey=Savitar465_Github-organizations-ms
           -Dsonar.projectName=Github-organizations-ms
+          -Dsonar.branch.name=${{ github.ref_name }}
           -Dsonar.qualitygate.wait=true
 
   docker-push:
