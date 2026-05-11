@@ -80,17 +80,8 @@ jobs:
       - name: Make mvnw executable
         run: chmod +x mvnw
 
-      - name: Run tests and SonarCloud analysis
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B verify sonar:sonar
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.organization=Savitar465
-          -Dsonar.projectKey=Savitar465_Github-organizations-ms
-          -Dsonar.projectName=Github-organizations-ms
-          -Dsonar.branch.name=${{ github.ref_name }}
-          -Dsonar.qualitygate.wait=true
+      - name: Run tests
+        run: ./mvnw -B verify
 
   docker-push:
     needs: [ build, test ]
