@@ -34,6 +34,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Set up Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('smithy/**/*.gradle', 'smithy/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradlew executable
+        run: chmod +x smithy/gradlew
+
+      - name: Generate Smithy Java sources
+        run: ./gradlew generateAllJavaServers --no-daemon -p smithy
+        working-directory: smithy
+
       - name: Make mvnw executable
         run: chmod +x mvnw
 
@@ -50,6 +67,8 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,6 +102,23 @@ jobs:
       - name: Run tests
         run: ./mvnw -B verify
 
+      - name: SonarCloud analysis
+        if: ${{ env.SONAR_TOKEN != '' }}
+        uses: sonarsource/sonarqube-scan-action@v8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=dtarqui_Github-organizations-ms
+            -Dsonar.projectName=Github-organizations-ms
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test/java
+            -Dsonar.java.binaries=target/classes
+            -Dsonar.java.test.binaries=target/test-classes
+
   docker-push:
     needs: [ build, test ]
     runs-on: ubuntu-latest
@@ -110,6 +146,16 @@ jobs:
         with:
           context: .
           push: true
+          labels: |
+            org.opencontainers.image.title=Github-organizations-ms
+            org.opencontainers.image.description=Microservicio de organizaciones y gestion de miembros/roles por organizacion
+            org.opencontainers.image.vendor=Githubx
+            org.opencontainers.image.url=https://github.com/dtarqui/Github-organizations-ms
+            org.opencontainers.image.source=https://github.com/dtarqui/Github-organizations-ms
+            org.opencontainers.image.documentation=https://github.com/dtarqui/Github-organizations-ms/blob/main/README.md
+            org.opencontainers.image.authors=dtarqui
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.revision=${{ github.sha }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:latest
