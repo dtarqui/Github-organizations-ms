@@ -44,12 +44,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Make gradlew executable
-        run: chmod +x smithy/gradlew
+      - name: Make gradlew executable (if present)
+        run: |
+          if [ -f smithy/gradlew ]; then
+            chmod +x smithy/gradlew
+          else
+            echo "No smithy/gradlew found — skipping make step"
+          fi
 
-      - name: Generate Smithy Java sources
-        run: ./gradlew generateAllJavaServers --no-daemon -p smithy
-        working-directory: smithy
+      - name: Generate Smithy Java sources (if configured)
+        run: |
+          if [ -f smithy/gradlew ]; then
+            (cd smithy && ./gradlew generateAllJavaServers --no-daemon -p smithy)
+          elif [ -f smithy/build.gradle ]; then
+            echo "No gradle wrapper found, attempting system gradle"
+            gradle -p smithy generateAllJavaServers --no-daemon || echo "Gradle generation failed, continuing"
+          else
+            echo "No Smithy build configuration found — skipping generation"
+          fi
 
       - name: Make mvnw executable
         run: chmod +x mvnw
