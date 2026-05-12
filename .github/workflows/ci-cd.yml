@@ -153,6 +153,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Resolve Docker image repository
+        env:
+          DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
+        run: |
+          if [ -z "$DOCKERHUB_REPOSITORY" ]; then
+            echo "IMAGE_REPO=github-organizations-ms" >> "$GITHUB_ENV"
+          else
+            echo "IMAGE_REPO=$DOCKERHUB_REPOSITORY" >> "$GITHUB_ENV"
+          fi
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v7.1.0
         with:
@@ -169,5 +179,5 @@ jobs:
             org.opencontainers.image.version=${{ github.ref_name }}
             org.opencontainers.image.revision=${{ github.sha }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_REPO }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_REPO }}:latest
