@@ -7,6 +7,7 @@ import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBod
 import com.githubx.Github_organizations_ms.generated.model.ListMyOrganizationsBody;
 import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
 import com.githubx.Github_organizations_ms.generated.model.PaginationMeta;
+import com.githubx.Github_organizations_ms.generated.model.SearchOrganizationsBody;
 import com.githubx.Github_organizations_ms.generated.model.UpdateOrganizationBody;
 import com.githubx.Github_organizations_ms.mapper.OrganizationMapper;
 import com.githubx.Github_organizations_ms.model.OrgMember;
@@ -147,5 +148,28 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (!org.getOwnerId().equals(userId)) {
             throw ForbiddenOperationException.notOwner();
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SearchOrganizationsBody searchOrganizations(String query, int page, int perPage) {
+        PageRequest pageRequest = PageRequest.of(page - 1, perPage);
+        String searchPattern = "%" + query.toLowerCase() + "%";
+
+        Page<Organization> orgPage = organizationDao.searchByNameOrDescription(searchPattern, pageRequest);
+
+        List<OrganizationDTO> organizations = orgPage.getContent().stream()
+                .map(org -> organizationMapper.toDto(org, 0))
+                .toList();
+
+        PaginationMeta pagination = new PaginationMeta()
+                .page(page)
+                .perPage(perPage)
+                .total((int) orgPage.getTotalElements())
+                .totalPages(orgPage.getTotalPages());
+
+        return new SearchOrganizationsBody()
+                .organizations(organizations)
+                .pagination(pagination);
     }
 }
