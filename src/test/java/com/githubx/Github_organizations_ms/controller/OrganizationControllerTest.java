@@ -22,7 +22,13 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(OrganizationController.class)
+@WebMvcTest(
+    controllers = OrganizationController.class,
+    properties = {
+        "JWT_JWK_SET_URI=http://localhost:8080/realms/test/protocol/openid-connect/certs",
+        "JWT_ISSUER_URI=http://localhost:8080/realms/test"
+    }
+)
 @ContextConfiguration(classes = GithubOrganizationsMsApplication.class)
 class OrganizationControllerTest {
 

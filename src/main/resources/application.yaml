@@ -35,8 +35,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI}
-          jwk-set-uri: ${JWT_JWK_SET_URI}
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/githubx}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8080/realms/githubx/protocol/openid-connect/certs}
 
 # ===== SERVIDOR =====
 server:
