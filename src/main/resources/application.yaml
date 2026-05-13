@@ -1,6 +1,6 @@
 spring:
   config:
-    import: optional:file:./.env.properties
+    import: optional:file:./.env[.properties]
   profiles:
     active: dev
   application:
@@ -8,7 +8,7 @@ spring:
 
   # ===== DATASOURCE =====
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=verify-full&sslrootcert=${SSL_CERT_PATH}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -35,12 +35,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/githubx}
-          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8080/realms/githubx/protocol/openid-connect/certs}
+          issuer-uri: ${JWT_ISSUER_URI}
+          jwk-set-uri: ${JWT_JWK_SET_URI}
 
 # ===== SERVIDOR =====
 server:
-  port: ${SERVER_PORT:8083}
+  port: ${SERVER_PORT:8085}
   servlet:
     context-path: /
 
@@ -76,7 +76,8 @@ logging:
   level:
     root: INFO
     com.githubx: DEBUG
-    org.springframework.security: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
   pattern:

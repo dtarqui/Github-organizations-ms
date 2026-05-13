@@ -26,4 +26,15 @@ public interface OrganizationDao extends JpaRepository<Organization, UUID> {
             WHERE m.userId = :userId
             """)
     Page<Organization> findAllByMemberUserId(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
+     * Busca organizaciones públicas por nombre o descripción (case insensitive).
+     */
+    @Query("""
+            SELECT o FROM Organization o
+            WHERE o.visibility = 'PUBLIC'
+            AND (LOWER(o.name) LIKE :pattern OR LOWER(o.description) LIKE :pattern OR LOWER(o.displayName) LIKE :pattern)
+            ORDER BY o.name ASC
+            """)
+    Page<Organization> searchByNameOrDescription(@Param("pattern") String pattern, Pageable pageable);
 }

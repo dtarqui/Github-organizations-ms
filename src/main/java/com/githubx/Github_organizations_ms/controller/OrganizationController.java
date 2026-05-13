@@ -3,6 +3,7 @@ package com.githubx.Github_organizations_ms.controller;
 import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
 import com.githubx.Github_organizations_ms.generated.model.ListMyOrganizationsBody;
 import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
+import com.githubx.Github_organizations_ms.generated.model.SearchOrganizationsBody;
 import com.githubx.Github_organizations_ms.generated.model.UpdateOrganizationBody;
 import com.githubx.Github_organizations_ms.service.contratos.OrganizationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,5 +68,15 @@ public class OrganizationController {
 
         organizationService.deleteOrganization(orgName);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/v1/orgs/search")
+    @Operation(summary = "Busca organizaciones por nombre o descripción")
+    public ResponseEntity<SearchOrganizationsBody> searchOrganizations(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int perPage) {
+
+        return ResponseEntity.ok(organizationService.searchOrganizations(q, page, perPage));
     }
 }

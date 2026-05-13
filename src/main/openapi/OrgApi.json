@@ -250,6 +250,18 @@
           },
           "pagination": { "$ref": "#/components/schemas/PaginationMeta" }
         }
+      },
+
+      "SearchOrganizationsBody": {
+        "type": "object",
+        "required": ["organizations", "pagination"],
+        "properties": {
+          "organizations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrganizationDTO" }
+          },
+          "pagination": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
       }
 
     }
