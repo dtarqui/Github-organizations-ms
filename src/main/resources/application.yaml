@@ -40,7 +40,7 @@ spring:
 
 # ===== SERVIDOR =====
 server:
-  port: ${SERVER_PORT:8083}
+  port: ${SERVER_PORT:8085}
   servlet:
     context-path: /
 

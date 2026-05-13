@@ -18,4 +18,6 @@ public interface TeamRepoDao extends JpaRepository<TeamRepo, TeamRepo.TeamRepoId
     void deleteByTeamIdAndRepoName(UUID teamId, String repoName);
 
     int countByTeamId(UUID teamId);
+
+    List<TeamRepo> findAllByFullName(String fullName);
 }

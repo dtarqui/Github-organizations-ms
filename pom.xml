@@ -79,12 +79,14 @@
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
         </dependency>
+        <!-- Devtools deshabilitado: causa conflicto con gRPC (Lookup method resolution failed)
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        -->
         <!-- ── gRPC ──────────────────────────────────────────────── -->
         <dependency>
             <groupId>net.devh</groupId>

@@ -1,5 +1,6 @@
 package com.githubx.Github_organizations_ms.controller;
 
+import com.githubx.Github_organizations_ms.dto.RepoAccessResponse;
 import com.githubx.Github_organizations_ms.generated.model.AddTeamRepoBody;
 import com.githubx.Github_organizations_ms.generated.model.ListOrgReposBody;
 import com.githubx.Github_organizations_ms.generated.model.ListTeamReposBody;
@@ -62,5 +63,14 @@ public class TeamRepoController {
             @RequestParam(defaultValue = "20") int perPage) {
 
         return ResponseEntity.ok(teamRepoService.listOrgRepos(orgName, page, perPage));
+    }
+
+    @GetMapping("/v1/repos/{owner}/{repo}/access/teams")
+    @Operation(summary = "Obtiene los equipos que tienen acceso a un repositorio y sus miembros")
+    public ResponseEntity<RepoAccessResponse> getRepoAccess(
+            @PathVariable String owner,
+            @PathVariable String repo) {
+
+        return ResponseEntity.ok(teamRepoService.getRepoAccess(owner, repo));
     }
 }

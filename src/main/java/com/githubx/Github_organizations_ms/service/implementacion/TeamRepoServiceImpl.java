@@ -4,7 +4,9 @@ import com.githubx.Github_organizations_ms.config.security.AuthenticatedUserReso
 import com.githubx.Github_organizations_ms.dao.OrgMemberDao;
 import com.githubx.Github_organizations_ms.dao.OrganizationDao;
 import com.githubx.Github_organizations_ms.dao.TeamDao;
+import com.githubx.Github_organizations_ms.dao.TeamMemberDao;
 import com.githubx.Github_organizations_ms.dao.TeamRepoDao;
+import com.githubx.Github_organizations_ms.dto.RepoAccessResponse;
 import com.githubx.Github_organizations_ms.generated.model.AddTeamRepoBody;
 import com.githubx.Github_organizations_ms.generated.model.ListOrgReposBody;
 import com.githubx.Github_organizations_ms.generated.model.ListTeamReposBody;
@@ -13,6 +15,7 @@ import com.githubx.Github_organizations_ms.generated.model.TeamRepoDTO;
 import com.githubx.Github_organizations_ms.mapper.TeamRepoMapper;
 import com.githubx.Github_organizations_ms.model.Organization;
 import com.githubx.Github_organizations_ms.model.Team;
+import com.githubx.Github_organizations_ms.model.TeamMember;
 import com.githubx.Github_organizations_ms.model.TeamPermission;
 import com.githubx.Github_organizations_ms.model.TeamRepo;
 import com.githubx.Github_organizations_ms.service.contratos.TeamRepoService;
@@ -23,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +38,7 @@ public class TeamRepoServiceImpl implements TeamRepoService {
     private final OrganizationDao organizationDao;
     private final OrgMemberDao orgMemberDao;
     private final TeamDao teamDao;
+    private final TeamMemberDao teamMemberDao;
     private final TeamRepoDao teamRepoDao;
     private final TeamRepoMapper teamRepoMapper;
     private final AuthenticatedUserResolver userResolver;
@@ -105,6 +110,48 @@ public class TeamRepoServiceImpl implements TeamRepoService {
         return new ListOrgReposBody()
                 .repositories(List.of())
                 .pagination(pagination);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RepoAccessResponse getRepoAccess(String owner, String repo) {
+        String fullName = owner + "/" + repo;
+
+        // Find all teams that have access to this repo
+        List<TeamRepo> teamRepos = teamRepoDao.findAllByFullName(fullName);
+
+        List<RepoAccessResponse.TeamAccessDTO> teamAccessList = new ArrayList<>();
+
+        for (TeamRepo teamRepo : teamRepos) {
+            Team team = teamDao.findById(teamRepo.getTeamId()).orElse(null);
+            if (team == null) continue;
+
+            Organization org = organizationDao.findById(team.getOrganizationId()).orElse(null);
+            if (org == null) continue;
+
+            // Get team members
+            List<TeamMember> members = teamMemberDao.findAllByTeamId(team.getId());
+            List<RepoAccessResponse.TeamMemberDTO> memberDTOs = members.stream()
+                    .map(m -> RepoAccessResponse.TeamMemberDTO.builder()
+                            .userId(m.getUserId().toString())
+                            .username(m.getUsername())
+                            .avatarUrl(m.getAvatarUrl())
+                            .build())
+                    .toList();
+
+            teamAccessList.add(RepoAccessResponse.TeamAccessDTO.builder()
+                    .teamId(team.getId().toString())
+                    .teamName(team.getName())
+                    .orgName(org.getName())
+                    .permission(teamRepo.getPermission().name())
+                    .members(memberDTOs)
+                    .build());
+        }
+
+        return RepoAccessResponse.builder()
+                .teams(teamAccessList)
+                .collaborators(List.of())
+                .build();
     }
 
     private Organization findOrgOrThrow(String orgName) {
