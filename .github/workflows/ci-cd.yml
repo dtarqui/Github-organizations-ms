@@ -18,11 +18,11 @@ jobs:
           is-executable: true
           working-directory: "./"
 
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '25'
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -92,11 +92,11 @@ jobs:
           is-executable: true
           working-directory: "./"
 
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '25'
 
       - name: Cache Maven packages
         uses: actions/cache@v4
