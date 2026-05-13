@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 LABEL org.opencontainers.image.title="Github-organizations-ms" \
 	org.opencontainers.image.description="Microservicio de organizaciones y gestion de miembros/roles por organizacion" \
 	org.opencontainers.image.vendor="Githubx" \
