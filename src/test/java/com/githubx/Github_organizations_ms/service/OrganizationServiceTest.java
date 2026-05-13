@@ -1,4 +1,4 @@
-package com.githubx.Github_organizations_ms;
+package com.githubx.Github_organizations_ms.service;
 
 import com.githubx.Github_organizations_ms.config.security.AuthenticatedUserResolver;
 import com.githubx.Github_organizations_ms.dao.OrgMemberDao;

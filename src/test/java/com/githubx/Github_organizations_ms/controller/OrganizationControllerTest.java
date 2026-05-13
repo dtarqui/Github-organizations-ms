@@ -1,7 +1,7 @@
-package com.githubx.Github_organizations_ms;
+package com.githubx.Github_organizations_ms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.githubx.Github_organizations_ms.controller.OrganizationController;
+import com.githubx.Github_organizations_ms.GithubOrganizationsMsApplication;
 import com.githubx.Github_organizations_ms.generated.model.CreateOrganizationBody;
 import com.githubx.Github_organizations_ms.generated.model.OrganizationDTO;
 import com.githubx.Github_organizations_ms.generated.model.OrgVisibility;
@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(OrganizationController.class)
+@ContextConfiguration(classes = GithubOrganizationsMsApplication.class)
 class OrganizationControllerTest {
 
     @Autowired
