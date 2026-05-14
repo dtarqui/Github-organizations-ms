@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.title="Github-organizations-ms" \
 	org.opencontainers.image.source="https://github.com/dtarqui/Github-organizations-ms" \
 	org.opencontainers.image.documentation="https://github.com/dtarqui/Github-organizations-ms/blob/main/README.md" \
 	org.opencontainers.image.authors="dtarqui"
-EXPOSE 8083
+EXPOSE 8085
 EXPOSE 9090
 USER root
 
